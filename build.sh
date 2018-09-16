@@ -161,7 +161,7 @@ apt-get purge -y \
     liblcms2-dev \
     libltdl-dev \
     liblzma-dev \
-    libmariadb-dev \
+    libmariadbclient-dev \
     libmongoclient-dev \
     libnetcdf-dev \
     libopenjp2-7-dev \

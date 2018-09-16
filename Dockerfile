@@ -1,7 +1,7 @@
 # Dockerfile for GDAL - Geospatial Data Abstraction Library 
-FROM dgricci/proj:1.0.0
+FROM dgricci/proj:5.2.0
 MAINTAINER Didier Richard <didier.richard@ign.fr>
-LABEL       version="1.0.0" \
+LABEL       version="1.1.0" \
             gdal="v2.3.1" \
             os="Debian Stretch" \
             description="GDAL library and softwares"

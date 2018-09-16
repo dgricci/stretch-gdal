@@ -1,11 +1,12 @@
 % GDAL - Geospatial Data Abstraction Library  
 % Didier Richard  
-% 2018/09/02
+% 2018/09/16
 
 ---
 
 revision:
-    - 1.0.0 : 2018/09/02  
+    - 1.0.0 : 2018/09/02 : proj 5.1.0, gdal 2.3.1  
+    - 1.1.0 : 2018/09/16 : proj 5.2.0, gdal 2.3.1  
 
 ---
 
