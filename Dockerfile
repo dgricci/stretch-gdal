@@ -1,13 +1,13 @@
 # Dockerfile for GDAL - Geospatial Data Abstraction Library 
 FROM dgricci/proj:5.2.0
 MAINTAINER Didier Richard <didier.richard@ign.fr>
-LABEL       version="1.1.0" \
-            gdal="v2.3.1" \
+LABEL       version="1.2.0" \
+            gdal="v2.3.2" \
             os="Debian Stretch" \
             description="GDAL library and softwares"
 
 ARG GDAL_VERSION
-ENV GDAL_VERSION ${GDAL_VERSION:-2.3.1}
+ENV GDAL_VERSION ${GDAL_VERSION:-2.3.2}
 ARG GDAL_DOWNLOAD_URL
 ENV GDAL_DOWNLOAD_URL ${GDAL_DOWNLOAD_URL:-http://download.osgeo.org/gdal/$GDAL_VERSION/gdal-$GDAL_VERSION.tar.gz}
 ARG GDAL_AUTOTEST_DOWNLOAD_URL

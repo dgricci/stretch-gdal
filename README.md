@@ -1,12 +1,13 @@
 % GDAL - Geospatial Data Abstraction Library  
 % Didier Richard  
-% 2018/09/16
+% 2018/09/28
 
 ---
 
 revision:
     - 1.0.0 : 2018/09/02 : proj 5.1.0, gdal 2.3.1  
     - 1.1.0 : 2018/09/16 : proj 5.2.0, gdal 2.3.1  
+    - 1.2.0 : 2018/09/28 : proj 5.2.0, gdal 2.3.2  
 
 ---
 
@@ -31,8 +32,8 @@ $ docker tag dgricci/gdal:$(< VERSION) dgricci/gdal:latest
 
 ```bash
 $ docker build \
-    --build-arg GDAL_VERSION=2.3.1 \
-    --build-arg GDAL_DOWNLOAD_URL=http://download.osgeo.org/gdal/2.3.1/gdal-2.3.1.tar.gz \
+    --build-arg GDAL_VERSION=2.3.2 \
+    --build-arg GDAL_DOWNLOAD_URL=http://download.osgeo.org/gdal/2.3.2/gdal-2.3.2.tar.gz \
     -t dgricci/gdal:$(< VERSION) .
 $ docker tag dgricci/gdal:$(< VERSION) dgricci/gdal:latest
 ```
@@ -43,7 +44,7 @@ See `dgricci/stretch` README for handling permissions with dockers volumes.
 
 ```bash
 $ docker run --rm dgricci/gdal:$(< VERSION)
-GDAL 2.3.1, released 2018/06/22
+GDAL 2.3.2, released 2018/09/21
 Supported Formats:
   VRT -raster- (rw+v): Virtual Raster
   DERIVED -raster- (ro): Derived datasets using VRT pixel functions
