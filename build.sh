@@ -2,6 +2,8 @@
 
 # Dockerfile for GDAL - Geospatial Data Abstraction Library 
 
+# Check over there : https://salsa.debian.org/debian-gis-team/gdal/blob/master/debian/rules
+
 # Exit on any non-zero status.
 trap 'exit' ERR
 set -E
@@ -21,6 +23,7 @@ apt-get -qy --no-install-recommends install \
     libboost-system1.62-dev \
     libboost-thread1.62-dev \
     libcfitsio-dev \
+    libcharls-dev \
     libcurl4-gnutls-dev \
     libdap-dev \
     libepsilon-dev \
@@ -91,47 +94,60 @@ rm -f gdal-$GDAL_VERSION.tar.gz*
     touch config.rpath ; \
     ./configure \
         --prefix=/usr \
-        --with-libz=/usr/lib/x86_64-linux-gnu \
-        --with-liblzma=yes \
-        --with-pg=/usr/bin/pg_config \
+        --with-armadillo=yes \
         --with-cfitsio=/usr/lib/x86_64-linux-gnu \
-        --with-pcraster=internal \
-        --with-png=internal \
-        --with-libtiff=internal \
+        --with-charls \
+        --with-curl=/usr/bin \
+        --with-ecw=no \
+        --with-epsilon=yes \
+        --with-freexl=yes \
+        --with-geos=yes \
         --with-geotiff=internal \
+        --with-gif=internal \
+        --with-grass=no \
+        --with-hdf4=/usr \
+        --with-hdf5=/usr/lib/x86_64-linux-gnu/hdf5/serial/ \
         --with-jpeg=internal \
         --with-jpeg12 \
-        --with-gif=internal \
-        --with-hdf4=/usr \
-        --with-netcdf=/usr \
-        --with-openjpeg \
-        --with-mysql=/usr/bin/mysql_config \
-        --with-xerces=yes \
+        --with-libjson-c=/usr \
         --with-libkml=yes \
-        --with-odbc=/usr/lib/x86_64-linux-gnu \
-        --with-curl=/usr/bin \
-        --with-xml2=/usr/bin \
+        --with-liblzma=yes \
+        --with-libtiff=yes \
+        --with-libz=/usr/lib/x86_64-linux-gnu \
+        --with-mdb \
+        --with-mrsid=no \
+        --with-mysql=/usr/bin/mysql_config \
         --with-mongocxx=/usr \
+        --with-netcdf=/usr \
+        --with-odbc=/usr/lib/x86_64-linux-gnu \
+        --with-ogdi=no \
+        --with-openjpeg \
+        --with-pcraster=internal \
+        --with-pcre \
+        --with-png=internal \
+        --with-pg=/usr/bin/pg_config \
+        --with-podofo=yes \
+        --with-poppler=no \
+        --with-proj \
+        --with-proj5-api=yes \
+        --with-qhull=internal \
+        --with-sosi=no \
         --with-spatialite=yes \
         --with-sqlite3=yes \
-        --with-pcre \
-        --with-epsilon=yes \
+        --with-threads \
         --with-webp=yes \
-        --with-geos=yes \
-        --with-qhull=internal \
-        --with-freexl=yes \
-        --with-libjson-c=internal \
-        --with-podofo=yes \
+        --with-xerces=yes \
+        --with-xml2=/usr/bin \
         --with-php \
         --with-python \
         --with-java=/usr/lib/jvm/java-8-openjdk-amd64 \
-        --with-mdb \
-        --with-armadillo=yes && \
+        && \
         sed -i -e 's/\(CFLAGS=-fpic\)/\1 -fpermissive -Wdeprecated-declarations/' swig/php/GNUmakefile && \
     NPROC=$(nproc) && \
     make -j$NPROC 2>&1 | tee ../../make.log && \
     make install ; \
     ldconfig ; \
+    exit 0 ; \
     cd .. ; \
     rm -fr gdal-$GDAL_VERSION ; \
 }
@@ -149,6 +165,7 @@ apt-get purge -y \
     libbison-dev \
     liblapack-dev \
     libcfitsio-dev \
+    libcharls-dev \
     libcurl4-gnutls-dev \
     libdap-dev \
     libepsilon-dev \
