@@ -10,10 +10,11 @@ set -E
 
 echo "Compiling GDAL ${GDAL_VERSION}..."
 
-# get php5 as php7 is not yet supported by nor gdal, neither mapserver :
-wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
-echo "deb https://packages.sury.org/php/ stretch main" > /etc/apt/sources.list.d/php56.list
-# thanks to @debsuryorg
+# >= 2.4 : no more php support
+## get php5 as php7 is not yet supported by nor gdal, neither mapserver :
+#wget -O /etc/apt/trusted.gpg.d/php.gpg https://packages.sury.org/php/apt.gpg
+#echo "deb https://packages.sury.org/php/ stretch main" > /etc/apt/sources.list.d/php56.list
+## thanks to @debsuryorg
 
 01-install.sh
 # default-jdk-headless provides, through openjdk-8-jre-headless, libjmv.so needed when using the flag with-java !
@@ -41,6 +42,7 @@ apt-get -qy --no-install-recommends install \
     libpcre3-dev \
     libpodofo-dev \
     libpq-dev \
+    libqhull-dev \
     libspatialite-dev \
     libsqlite3-dev \
     libtiff-dev \
@@ -50,7 +52,6 @@ apt-get -qy --no-install-recommends install \
     libxml2-dev \
     libmdb2 \
     libtiff-tools \
-    php5.6-dev \
     python-dev \
     unixodbc-dev \
     bash-completion \
@@ -61,6 +62,7 @@ apt-get -qy --no-install-recommends install \
     default-libmysqlclient-dev \
     pngtools \
     python-numpy \
+    python-pip \
     python-setuptools \
     zlib1g-dev
 # configure does not found mongoclient as it is spreaded in /usr/include and
@@ -83,17 +85,12 @@ wget --no-verbose "$GDAL_DOWNLOAD_URL.md5"
 md5sum --strict -c gdal-$GDAL_VERSION.tar.gz.md5
 tar xzf gdal-$GDAL_VERSION.tar.gz
 rm -f gdal-$GDAL_VERSION.tar.gz*
-
-# compiling php :
-#gdal_wrap.cpp:935:41: error: invalid conversion from ‘const char*’ to ‘char*’ [-fpermissive]
-#gdal_wrap.cpp:2064:18: warning: ‘CPLErr GDALGetRasterHistogram(GDALRasterBandH, double, double, int, int*, int, int, GDALProgressFunc, void*)’ is deprecated [-Wdeprecated-declarations] 
-#...
-#add -fpermissive and -Wdeprecated-declarations to swig/php/GNUmakefile
+# FIXME : java binding lost ?!
 { \
     cd gdal-$GDAL_VERSION ; \
     touch config.rpath ; \
     ./configure \
-        --prefix=/usr \
+        --prefix=${GDAL_HOME} \
         --with-armadillo=yes \
         --with-cfitsio=/usr/lib/x86_64-linux-gnu \
         --with-charls \
@@ -130,7 +127,7 @@ rm -f gdal-$GDAL_VERSION.tar.gz*
         --with-poppler=no \
         --with-proj \
         --with-proj5-api=yes \
-        --with-qhull=internal \
+        --with-qhull=yes \
         --with-sosi=no \
         --with-spatialite=yes \
         --with-sqlite3=yes \
@@ -138,21 +135,54 @@ rm -f gdal-$GDAL_VERSION.tar.gz*
         --with-webp=yes \
         --with-xerces=yes \
         --with-xml2=/usr/bin \
-        --with-php \
         --with-python \
-        --with-java=/usr/lib/jvm/java-8-openjdk-amd64 \
+        --with-java \
         && \
-        sed -i -e 's/\(CFLAGS=-fpic\)/\1 -fpermissive -Wdeprecated-declarations/' swig/php/GNUmakefile && \
     NPROC=$(nproc) && \
-    make -j$NPROC 2>&1 | tee ../../make.log && \
+    make -j$NPROC && \
     make install ; \
-    ldconfig ; \
-    exit 0 ; \
     cd .. ; \
     rm -fr gdal-$GDAL_VERSION ; \
 }
 
-# FIXME: run autotest ...
+#
+case "${GDAL_HOME}" in
+"/usr")
+    ;;
+*)
+    cp ${GDAL_HOME}/bin/* /usr/bin/
+    cp ${GDAL_HOME}/lib/* /usr/lib/
+    cp ${GDAL_HOME}/include/* /usr/include/
+    cp -a ${GDAL_HOME}/share/gdal /usr/share/
+    sed -i -e "s:^\(libdir=\).*$:\1'/usr/lib':" /usr/lib/libgdal.la
+    ;;
+esac
+ldconfig
+
+# run autotest ...
+wget --no-verbose "$GDAL_AUTOTEST_DOWNLOAD_URL"
+# Oops it is not a gzip compressed archive ... Cf.  https://github.com/OSGeo/gdal/blob/master/gdal/mkgdaldist.sh@L200 missing z option in tar cf
+#tar xzf gdalautotest-$GDAL_VERSION.tar.gz
+tar xf gdalautotest-$GDAL_VERSION.tar.gz
+rm -f gdalautotest-$GDAL_VERSION.tar.gz
+## < 2.3
+#{ \
+#    cd gdalautotest-$GDAL_VERSION ; \
+#    NPROC=$(nproc) && \
+#    make -j$NPROC test ; \
+#    cd .. ; \
+#    rm -fr gdalautotest-$GDAL_VERSION ; \
+#}
+# >= 2.4
+{ \
+    cd gdalautotest-$GDAL_VERSION ; \
+    pip install -r ./requirements.txt ; \
+    trap '' ERR ; \
+    pytest ; \
+    trap 'exit' ERR ; \
+    cd .. ; \
+    rm -fr gdalautotest-$GDAL_VERSION ; \
+}
 
 # clean
 # don't auto-remove otherwise all libs are gone (not only headers) :
@@ -185,6 +215,7 @@ apt-get purge -y \
     libpcre3-dev \
     libpodofo-dev \
     libpq-dev \
+    libqhull-dev \
     libspatialite-dev \
     libsqlite3-dev \
     libtiff-dev \
@@ -194,7 +225,6 @@ apt-get purge -y \
     libxml2-dev \
     libxml2-dev \
     linux-libc-dev \
-    php5.6-dev \
     python-dev \
     unixodbc-dev \
     zlib1g-dev
