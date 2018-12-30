@@ -1,6 +1,6 @@
 % GDAL - Geospatial Data Abstraction Library  
 % Didier Richard  
-% 2018/11/18
+% 2018/12/29
 
 ---
 
@@ -8,6 +8,7 @@ revision:
     - 1.0.0 : 2018/09/02 : proj 5.1.0, gdal 2.3.1  
     - 1.1.0 : 2018/09/16 : proj 5.2.0, gdal 2.3.1  
     - 1.2.1 : 2018/09/28 : proj 5.2.0, gdal 2.3.2  
+    - 1.3.0 : 2018/12/29 : proj 5.2.0, gdal 2.4.0  
 
 ---
 
@@ -16,6 +17,21 @@ revision:
 ```bash
 $ docker build -t dgricci/gdal:$(< VERSION) .
 $ docker tag dgricci/gdal:$(< VERSION) dgricci/gdal:latest
+```
+
+By default, it builds gdal in /opt/gdal-2.4.0 (default value of GDAL_HOME) and
+copy binaries, headers and librairies in the relevant places in `/usr`.
+
+One can use the following command to install gdal directly in `/usr` :
+
+```bash
+$ docker build --build-arg GDAL_HOME=/usr -t dgricci/gdal:$(< VERSION) .
+```
+
+To get a full output during building, use :
+
+```bash
+$ docker build --build-arg GDAL_HOME=/usr -t dgricci/gdal:$(< VERSION) . 2>&1 | tee build-gdal.log
 ```
 
 ## Behind a proxy (e.g. 10.0.4.2:3128) ##
@@ -32,8 +48,10 @@ $ docker tag dgricci/gdal:$(< VERSION) dgricci/gdal:latest
 
 ```bash
 $ docker build \
-    --build-arg GDAL_VERSION=2.3.2 \
-    --build-arg GDAL_DOWNLOAD_URL=http://download.osgeo.org/gdal/2.3.2/gdal-2.3.2.tar.gz \
+    --build-arg GDAL_VERSION=2.4.0 \
+    --build-arg GDAL_DOWNLOAD_URL=http://download.osgeo.org/gdal/2.4.0/gdal-2.4.0.tar.gz \
+    --build-arg GDAL_AUTOTEST_DOWNLOAD_URL=http://download.osgeo.org/gdal/2.4.0/gdalautotest-2.4.0.tar.gz \
+    --build-arg GDAL_HOME=/opt/gdal-2.4.0 \
     -t dgricci/gdal:$(< VERSION) .
 $ docker tag dgricci/gdal:$(< VERSION) dgricci/gdal:latest
 ```
@@ -44,7 +62,7 @@ See `dgricci/stretch` README for handling permissions with dockers volumes.
 
 ```bash
 $ docker run --rm dgricci/gdal:$(< VERSION)
-GDAL 2.3.2, released 2018/09/21
+GDAL 2.4.0, released 2018/12/14
 Supported Formats:
   VRT -raster- (rw+v): Virtual Raster
   DERIVED -raster- (ro): Derived datasets using VRT pixel functions
@@ -86,7 +104,7 @@ Supported Formats:
   Leveller -raster- (rw+v): Leveller heightfield
   Terragen -raster- (rw+v): Terragen heightfield
   GMT -raster- (rw): GMT NetCDF Grid Format
-  netCDF -raster,vector- (rw+s): Network Common Data Format
+  netCDF -raster,vector- (rw+vs): Network Common Data Format
   HDF4 -raster- (ros): Hierarchical Data Format Release 4
   HDF4Image -raster- (rw+): HDF4 Dataset
   ISIS3 -raster- (rw+v): USGS Astrogeology ISIS cube (Version 3)
@@ -143,6 +161,7 @@ Supported Formats:
   LCP -raster- (rwv): FARSITE v.4 Landscape File (.lcp)
   GTX -raster- (rw+v): NOAA Vertical Datum .GTX
   LOSLAS -raster- (rov): NADCON .los/.las Datum Grid Shift
+  NTv1 -raster- (rov): NTv1 Datum Grid Shift
   NTv2 -raster- (rw+vs): NTv2 Datum Grid Shift
   CTable2 -raster- (rw+v): CTable2 Datum Grid Shift
   ACE2 -raster- (rov): ACE2
@@ -150,13 +169,14 @@ Supported Formats:
   KRO -raster- (rw+v): KOLOR Raw
   ROI_PAC -raster- (rw+v): ROI_PAC raster
   RRASTER -raster- (rw+v): R Raster
+  BYN -raster- (rw+v): Natural Resources Canada's Geoid
   ARG -raster- (rwv): Azavea Raster Grid format
   RIK -raster- (rov): Swedish Grid RIK (.rik)
   USGSDEM -raster- (rwv): USGS Optional ASCII DEM (and CDED)
   GXF -raster- (rov): GeoSoft Grid Exchange Format
-  BAG -raster- (ro): Bathymetry Attributed Grid
-  HDF5 -raster- (ros): Hierarchical Data Format Release 5
-  HDF5Image -raster- (ro): HDF5 Dataset
+  BAG -raster- (rwv): Bathymetry Attributed Grid
+  HDF5 -raster- (rovs): Hierarchical Data Format Release 5
+  HDF5Image -raster- (rov): HDF5 Dataset
   NWT_GRD -raster- (rw+v): Northwood Numeric Grid Format .grd/.tab
   NWT_GRC -raster- (rov): Northwood Classified Grid Format .grc/.tab
   ADRG -raster- (rw+vs): ARC Digitized Raster Graphics
@@ -167,6 +187,7 @@ Supported Formats:
   SAGA -raster- (rw+v): SAGA GIS Binary Grid (.sdat, .sg-grd-z)
   XYZ -raster- (rwv): ASCII Gridded XYZ
   HF2 -raster- (rwv): HF2/HFZ heightfield raster
+  JPEGLS -raster- (rwv): JPEGLS
   OZI -raster- (rov): OziExplorer Image File
   CTG -raster- (rov): USGS LULC Composite Theme Grid
   E00GRID -raster- (rov): Arc/Info Export E00 GRID
@@ -175,9 +196,13 @@ Supported Formats:
   IRIS -raster- (rov): IRIS data (.PPI, .CAPPi etc)
   PRF -raster- (rov): Racurs PHOTOMOD PRF
   RDA -raster- (ro): DigitalGlobe Raster Data Access driver
+  EEDAI -raster- (ros): Earth Engine Data API Image
+  SIGDEM -raster- (rwv): Scaled Integer Gridded DEM .sigdem
+  IGNFHeightASCIIGrid -raster- (rov): IGN France height correction ASCII Grid
   GPKG -raster,vector- (rw+vs): GeoPackage
   CAD -raster,vector- (rovs): AutoCAD Driver
   PLSCENES -raster,vector- (ro): Planet Labs Scenes API
+  NGW -raster,vector- (rw+s): NextGIS Web
   GenBin -raster- (rov): Generic Binary (.hdr Labelled)
   ENVI -raster- (rw+v): ENVI .hdr Labelled
   EHdr -raster- (rw+v): ESRI .hdr Labelled
@@ -185,10 +210,11 @@ Supported Formats:
   HTTP -raster,vector- (ro): HTTP Fetching Wrapper
 Supported Formats:
   PCIDSK -raster,vector- (rw+v): PCIDSK Database File
-  netCDF -raster,vector- (rw+s): Network Common Data Format
+  netCDF -raster,vector- (rw+vs): Network Common Data Format
   JP2OpenJPEG -raster,vector- (rwv): JPEG-2000 driver based on OpenJPEG library
   PDF -raster,vector- (rw+s): Geospatial PDF
   MBTiles -raster,vector- (rw+v): MBTiles
+  EEDA -vector- (ro): Earth Engine Data API
   ESRI Shapefile -vector- (rw+v): ESRI Shapefile
   MapInfo File -vector- (rw+v): MapInfo File
   UK .NTF -vector- (rov): UK .NTF
@@ -206,6 +232,7 @@ Supported Formats:
   LIBKML -vector- (rw+v): Keyhole Markup Language (LIBKML)
   KML -vector- (rw+v): Keyhole Markup Language (KML)
   GeoJSON -vector- (rw+v): GeoJSON
+  GeoJSONSeq -vector- (rw+v): GeoJSON Sequence
   ESRIJSON -vector- (rov): ESRIJSON
   TopoJSON -vector- (rov): TopoJSON
   Interlis 1 -vector- (rw+v): Interlis 1
@@ -267,6 +294,7 @@ Supported Formats:
   TIGER -vector- (rw+v): U.S. Census TIGER/Line
   AVCBin -vector- (rov): Arc/Info Binary Coverage
   AVCE00 -vector- (rov): Arc/Info E00 (ASCII) Coverage
+  NGW -raster,vector- (rw+s): NextGIS Web
   HTTP -raster,vector- (ro): HTTP Fetching Wrapper
 ```
 
